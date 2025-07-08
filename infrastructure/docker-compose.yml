@@ -1,0 +1,123 @@
+version: "3.8"
+
+services:
+  # Infrastructure as Code
+  terraform-lab:
+    image: hashicorp/terraform:latest
+    volumes:
+      - terraform_data:/root/.terraform
+      - ./terraform:/terraform
+    networks:
+      - devops
+
+  # Container Registry
+  harbor:
+    image: goharbor/harbor-core:v2.5.0
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.registry-${STACK}.loadbalancer.server.port=80
+        - traefik.http.routers.registry-${STACK}.rule=Host(`registry.${DOMAIN}`)
+    volumes:
+      - harbor_data:/data
+    networks:
+      - devops
+
+  # CI/CD
+  jenkins:
+    image: jenkins/jenkins:lts-jdk11
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.jenkins-${STACK}.loadbalancer.server.port=8080
+        - traefik.http.routers.jenkins-${STACK}.rule=Host(`jenkins.${DOMAIN}`)
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - devops
+
+  # GitLab
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.gitlab-${STACK}.loadbalancer.server.port=80
+        - traefik.http.routers.gitlab-${STACK}.rule=Host(`gitlab.${DOMAIN}`)
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_data:/var/opt/gitlab
+    networks:
+      - devops
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.prometheus-${STACK}.loadbalancer.server.port=9090
+        - traefik.http.routers.prometheus-${STACK}.rule=Host(`prometheus.${DOMAIN}`)
+    volumes:
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.grafana-${STACK}.loadbalancer.server.port=3000
+        - traefik.http.routers.grafana-${STACK}.rule=Host(`grafana.${DOMAIN}`)
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+
+  # Logging
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - logging
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.0
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.kibana-${STACK}.loadbalancer.server.port=5601
+        - traefik.http.routers.kibana-${STACK}.rule=Host(`kibana.${DOMAIN}`)
+    networks:
+      - logging
+
+  # Load Testing
+  k6:
+    image: loadimpact/k6:latest
+    volumes:
+      - ./k6-scripts:/scripts
+    networks:
+      - devops
+
+networks:
+  devops:
+    driver: overlay
+  monitoring:
+    driver: overlay
+  logging:
+    driver: overlay
+
+volumes:
+  terraform_data:
+  harbor_data:
+  jenkins_home:
+  gitlab_config:
+  gitlab_data:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:

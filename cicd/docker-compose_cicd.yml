@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  drone:
+    image: drone/drone:latest
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.drone-${STACK}.loadbalancer.server.port=80
+        - traefik.http.routers.drone-${STACK}.rule=Host(`drone.${DOMAIN}`)
+    environment:
+      - DRONE_GITLAB_SERVER=http://gitlab.${DOMAIN}
+      - DRONE_GITLAB_CLIENT_ID=${DRONE_CLIENT_ID}
+      - DRONE_GITLAB_CLIENT_SECRET=${DRONE_CLIENT_SECRET}
+    volumes:
+      - drone_data:/data
+    networks:
+      - cicd
+
+  sonarqube:
+    image: sonarqube:community
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.sonar-${STACK}.loadbalancer.server.port=9000
+        - traefik.http.routers.sonar-${STACK}.rule=Host(`sonar.${DOMAIN}`)
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    networks:
+      - cicd
+
+  nexus:
+    image: sonatype/nexus3:latest
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.nexus-${STACK}.loadbalancer.server.port=8081
+        - traefik.http.routers.nexus-${STACK}.rule=Host(`nexus.${DOMAIN}`)
+    volumes:
+      - nexus_data:/nexus-data
+    networks:
+      - cicd
+
+networks:
+  cicd:
+    driver: overlay
+
+volumes:
+  drone_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  nexus_data:

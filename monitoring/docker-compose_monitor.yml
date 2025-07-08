@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  # APM Solution
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.jaeger-${STACK}.loadbalancer.server.port=16686
+        - traefik.http.routers.jaeger-${STACK}.rule=Host(`jaeger.${DOMAIN}`)
+    networks:
+      - monitoring
+
+  loki:
+    image: grafana/loki:latest
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+    networks:
+      - monitoring
+
+  prometheus-alertmanager:
+    image: prom/alertmanager:latest
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.services.alerts-${STACK}.loadbalancer.server.port=9093
+        - traefik.http.routers.alerts-${STACK}.rule=Host(`alerts.${DOMAIN}`)
+    volumes:
+      - alertmanager_data:/alertmanager
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    external: true
+
+volumes:
+  loki_data:
+  alertmanager_data:
