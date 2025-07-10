@@ -1,15 +1,6 @@
 version: "3.8"
 
 services:
-  # Infrastructure as Code
-  terraform-lab:
-    image: hashicorp/terraform:latest
-    volumes:
-      - terraform_data:/root/.terraform
-      - ./terraform:/terraform
-    networks:
-      - devops
-
   # Container Registry
   harbor:
     image: goharbor/harbor-core:v2.5.0
@@ -143,7 +134,6 @@ networks:
     driver: overlay
 
 volumes:
-  terraform_data:
   harbor_data:
   jenkins_home:
   gitlab_config:
