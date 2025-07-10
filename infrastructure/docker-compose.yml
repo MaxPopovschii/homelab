@@ -45,6 +45,9 @@ services:
   # CI/CD
   jenkins:
     image: jenkins/jenkins:lts-jdk11
+    environment:
+      - JENKINS_OPTS=--prefix=/jenkins
+    command: ["sh", "-c", "java -jar /usr/share/jenkins/jenkins.war --prefix=/jenkins"]
     deploy:
       labels:
         - traefik.enable=true
@@ -59,6 +62,9 @@ services:
   # GitLab
   gitlab:
     image: gitlab/gitlab-ce:latest
+    environment:
+      - GITLAB_RELATIVE_URL_ROOT=/gitlab
+    command: ["sh", "-c", "export GITLAB_RELATIVE_URL_ROOT=/gitlab && /assets/wrapper"]
     deploy:
       labels:
         - traefik.enable=true
@@ -73,6 +79,7 @@ services:
   # Monitoring
   prometheus:
     image: prom/prometheus:latest
+    command: ["--web.external-url=/prometheus"]
     deploy:
       labels:
         - traefik.enable=true
@@ -85,6 +92,9 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    environment:
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     deploy:
       labels:
         - traefik.enable=true
@@ -107,6 +117,9 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.0
+    environment:
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=true
     deploy:
       labels:
         - traefik.enable=true
