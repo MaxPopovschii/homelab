@@ -36,7 +36,7 @@ services:
       labels:
         - traefik.enable=true
         - traefik.http.services.registry-${STACK}.loadbalancer.server.port=80
-        - traefik.http.routers.registry-${STACK}.rule=Host(`registry.${DOMAIN}`)
+        - traefik.http.routers.registry-${STACK}.rule=PathPrefix(`/`)
     volumes:
       - harbor_data:/data
     networks:
@@ -49,7 +49,7 @@ services:
       labels:
         - traefik.enable=true
         - traefik.http.services.jenkins-${STACK}.loadbalancer.server.port=8080
-        - traefik.http.routers.jenkins-${STACK}.rule=Host(`jenkins.${DOMAIN}`)
+        - traefik.http.routers.jenkins-${STACK}.rule=PathPrefix(`/jenkins`)
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
@@ -63,7 +63,7 @@ services:
       labels:
         - traefik.enable=true
         - traefik.http.services.gitlab-${STACK}.loadbalancer.server.port=80
-        - traefik.http.routers.gitlab-${STACK}.rule=Host(`gitlab.${DOMAIN}`)
+        - traefik.http.routers.gitlab-${STACK}.rule=PathPrefix(`/gitlab`)
     volumes:
       - gitlab_config:/etc/gitlab
       - gitlab_data:/var/opt/gitlab
@@ -77,7 +77,7 @@ services:
       labels:
         - traefik.enable=true
         - traefik.http.services.prometheus-${STACK}.loadbalancer.server.port=9090
-        - traefik.http.routers.prometheus-${STACK}.rule=Host(`prometheus.${DOMAIN}`)
+        - traefik.http.routers.prometheus-${STACK}.rule=PathPrefix(`/prometheus`)
     volumes:
       - prometheus_data:/prometheus
     networks:
@@ -89,7 +89,7 @@ services:
       labels:
         - traefik.enable=true
         - traefik.http.services.grafana-${STACK}.loadbalancer.server.port=3000
-        - traefik.http.routers.grafana-${STACK}.rule=Host(`grafana.${DOMAIN}`)
+        - traefik.http.routers.grafana-${STACK}.rule=PathPrefix(`/grafana`)
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
@@ -111,7 +111,7 @@ services:
       labels:
         - traefik.enable=true
         - traefik.http.services.kibana-${STACK}.loadbalancer.server.port=5601
-        - traefik.http.routers.kibana-${STACK}.rule=Host(`kibana.${DOMAIN}`)
+        - traefik.http.routers.kibana-${STACK}.rule=PathPrefix(`/kibana`)
     networks:
       - logging
 
