@@ -1,9 +1,37 @@
 version: "3.8"
 
 services:
+  # Infrastructure as Code
+  terraform-lab:
+    image: hashicorp/terraform:latest
+    command: ["tail", "-f", "/dev/null"]
+    volumes:
+      - terraform_data:/root/.terraform
+      - ./terraform:/terraform
+    networks:
+      - devops
+
+  # Database per Harbor
+  postgresql:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: registry
+      POSTGRES_USER: harbor
+      POSTGRES_PASSWORD: harbor123
+    volumes:
+      - harbor_postgres_data:/var/lib/postgresql/data
+    networks:
+      - devops
+
   # Container Registry
   harbor:
     image: goharbor/harbor-core:v2.5.0
+    environment:
+      - POSTGRESQL_HOST=postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USERNAME=harbor
+      - POSTGRESQL_PASSWORD=harbor123
+      - POSTGRESQL_DATABASE=registry
     deploy:
       labels:
         - traefik.enable=true
@@ -90,6 +118,7 @@ services:
   # Load Testing
   k6:
     image: loadimpact/k6:latest
+    command: ["tail", "-f", "/dev/null"]
     volumes:
       - ./k6-scripts:/scripts
     networks:
@@ -134,7 +163,9 @@ networks:
     driver: overlay
 
 volumes:
+  terraform_data:
   harbor_data:
+  harbor_postgres_data:
   jenkins_home:
   gitlab_config:
   gitlab_data:
