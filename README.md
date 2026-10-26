@@ -27,6 +27,10 @@ cd homelab
 
 ### 2. Setup dell'infrastruttura di base
 
+Copia `infrastructure/.env.example` in `infrastructure/.env` e imposta una password nuova e univoca per `HARBOR_DB_PASSWORD`. Le vecchie credenziali pubblicate vanno cambiate anche nei servizi già avviati: modificare il file non cambia la password di un volume PostgreSQL esistente.
+
+La dashboard Traefik è disabilitata. Per riattivarla occorrono autenticazione e accesso ristretto. Non esporre questo laboratorio direttamente a Internet.
+
 Vai nella cartella `infrastructure` ed esegui lo script di setup:
 
 ```bash
