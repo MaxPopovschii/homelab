@@ -17,7 +17,7 @@ services:
     environment:
       POSTGRES_DB: registry
       POSTGRES_USER: harbor
-      POSTGRES_PASSWORD: harbor123
+      POSTGRES_PASSWORD: ${HARBOR_DB_PASSWORD:?Set HARBOR_DB_PASSWORD}
     volumes:
       - harbor_postgres_data:/var/lib/postgresql/data
     networks:
@@ -30,7 +30,7 @@ services:
       - POSTGRESQL_HOST=postgresql
       - POSTGRESQL_PORT=5432
       - POSTGRESQL_USERNAME=harbor
-      - POSTGRESQL_PASSWORD=harbor123
+      - POSTGRESQL_PASSWORD=${HARBOR_DB_PASSWORD:?Set HARBOR_DB_PASSWORD}
       - POSTGRESQL_DATABASE=registry
     deploy:
       labels:
@@ -141,7 +141,7 @@ services:
   traefik:
     image: traefik:v2.10
     command:
-      - --api.insecure=true
+      - --api.dashboard=false
       - --providers.docker=true
       - --providers.docker.swarmMode=true
       - --providers.docker.exposedbydefault=false
@@ -150,7 +150,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080" # Dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -161,11 +160,6 @@ services:
       placement:
         constraints:
           - node.role == manager
-      labels:
-        - traefik.enable=true
-        - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)
-        - traefik.http.routers.traefik.service=api@internal
-        - traefik.http.services.traefik.loadbalancer.server.port=8080
 
 networks:
   devops:
